@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,10 +20,50 @@ const inter = Inter({
   display: "swap",
 });
 
+// Production URL (used for absolute OG/Twitter image URLs). Set NEXT_PUBLIC_SITE_URL on Vercel.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://helpr.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Helpr — Tu equipo en WhatsApp, con memoria.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Helpr — Tu equipo en WhatsApp, con memoria.",
+    template: "%s · Helpr",
+  },
   description:
-    "Cada persona de tu ONG le escribe a Helpr por WhatsApp y él lo convierte en memoria operativa —tareas, decisiones y responsables— sin cambiar cómo trabaja el equipo.",
+    "Cada persona del equipo le escribe a Helpr por WhatsApp —por texto o audio— y él lo convierte en tareas, decisiones y responsables. Sin cambiar cómo trabaja nadie.",
+  applicationName: "Helpr",
+  keywords: [
+    "Helpr",
+    "WhatsApp",
+    "ONG",
+    "tareas",
+    "memoria operativa",
+    "gestión de equipos",
+    "decisiones",
+    "voluntariado",
+  ],
+  authors: [{ name: "Helpr" }],
+  creator: "Helpr",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName: "Helpr",
+    url: siteUrl,
+    title: "Helpr — Tu equipo en WhatsApp, con memoria.",
+    description:
+      "Texto o audio por WhatsApp, convertido en tareas, decisiones y responsables. Sin cambiar cómo trabaja el equipo.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Helpr — Tu equipo en WhatsApp, con memoria.",
+    description:
+      "Texto o audio por WhatsApp, convertido en tareas, decisiones y responsables.",
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f6f0e2",
 };
 
 export default function RootLayout({
