@@ -2,43 +2,81 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/*
+  Helpr — Design System (light-only)
+  Fuente de verdad: docs/MANIFEST.md
+  Bosque profundo + lima + crema · Bricolage Grotesque + Inter
+  Mapeo de tokens documentado en docs/DESIGN-SYSTEM.md
+*/
+
+/* Light-only: neutraliza las utilidades dark: de shadcn (nunca aplicamos .dark)
+   y evita que el modo oscuro del SO dispare prefers-color-scheme. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Tokens semánticos shadcn (mapeados a la paleta Helpr en :root) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Tokens de marca Helpr expuestos como utilidades (bg-bosque, text-lima, ...) — MANIFEST §3.1 */
+  --color-bosque: var(--bosque);
+  --color-bosque-hondo: var(--bosque-hondo);
+  --color-lima: var(--lima);
+  --color-lima-suave: var(--lima-suave);
+  --color-crema-base: var(--crema-base);
+  --color-crema-superficie: var(--crema-superficie);
+  --color-blanco: var(--blanco);
+  --color-ambar: var(--ambar);
+  --color-clay: var(--clay);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-linea: var(--linea);
+  --color-linea-oscura: var(--linea-oscura);
+
+  /* Estados semánticos (chips/badges) — MANIFEST §3.2 */
+  --color-exito: var(--lima-suave);
+  --color-exito-foreground: var(--exito-foreground);
+
+  /* Sidebar (dashboard, etapa siguiente) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Tipografía — MANIFEST §4 */
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radios — MANIFEST §6.1 (botones/inputs 10px, cards 12-14px, modales 16px) */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,75 +84,76 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Elevación — MANIFEST §6.4 (sombra verde-oscura, no negro puro) */
+  --shadow-card: 0 1px 2px rgba(8, 42, 30, 0.06);
+  --shadow-float: 0 6px 22px rgba(8, 42, 30, 0.18);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  /* --- Paleta de marca cruda (hex exactos del MANIFEST §3.1) --- */
+  --bosque: #0f3d2c;
+  --bosque-hondo: #082a1e;
+  --lima: #b6e84a;
+  --lima-suave: #d7f38c;
+  --crema-base: #f6f0e2;
+  --crema-superficie: #fcf8ef;
+  --blanco: #ffffff;
+  --ambar: #e0a33e;
+  --clay: #c8553d;
+  --tinta: #11241a;
+  --tinta-suave: #5e6b61;
+  --linea: #e6e0d2;
+  --linea-oscura: #1c3a2c;
+  --exito-foreground: #2c4a0a;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* --- Tokens semánticos shadcn -> paleta Helpr (MANIFEST §3.2) --- */
+  --background: var(--crema-base);
+  --foreground: var(--tinta);
+  --card: var(--crema-superficie);
+  --card-foreground: var(--tinta);
+  --popover: var(--blanco);
+  --popover-foreground: var(--tinta);
+
+  --primary: var(--bosque);
+  --primary-foreground: var(--blanco);
+
+  --secondary: #ece5d5;
+  --secondary-foreground: var(--bosque);
+
+  --muted: #efe8d6;
+  --muted-foreground: var(--tinta-suave);
+
+  /* Acento de hover/superficie: lima SUAVE (la lima brillante solo sobre oscuro) */
+  --accent: var(--lima-suave);
+  --accent-foreground: var(--exito-foreground);
+
+  --destructive: var(--clay);
+  --destructive-foreground: var(--blanco);
+
+  --border: var(--linea);
+  --input: var(--linea);
+  /* Foco sobre fondos claros = bosque; lima se reserva para fondos oscuros (MANIFEST §3.3) */
+  --ring: var(--bosque);
+
+  --radius: 0.625rem; /* ~10px base */
+
+  /* Charts — verdes/lima coherentes con la marca */
+  --chart-1: var(--bosque);
+  --chart-2: #2c6b4a;
+  --chart-3: #6fae4f;
+  --chart-4: var(--lima);
+  --chart-5: var(--ambar);
+
+  /* Sidebar (dashboard) — superficie bosque oscura con texto claro */
+  --sidebar: var(--bosque);
+  --sidebar-foreground: #e8efe9;
+  --sidebar-primary: var(--lima);
+  --sidebar-primary-foreground: var(--bosque-hondo);
+  --sidebar-accent: var(--bosque-hondo);
+  --sidebar-accent-foreground: var(--blanco);
+  --sidebar-border: var(--linea-oscura);
+  --sidebar-ring: var(--lima);
 }
 
 @layer base {
@@ -122,9 +161,53 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
-  html {
-    @apply font-sans;
+  /* Titulares en Bricolage — MANIFEST §4 (una display por vista) */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+  /* Foco siempre visible — nunca outline:none sin reemplazo (MANIFEST §3.3) */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Reveal sutil al entrar en viewport — MANIFEST §7 (fade + leve desplazamiento).
+   Lo dispara un IntersectionObserver (RevealObserver) agregando [data-shown].
+   Robusto ante saltos por anchor (#seccion): cualquier elemento visible se revela.
+   Fallback no-JS en el <noscript> del layout. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.reveal[data-shown] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Movimiento calmo — respetar prefers-reduced-motion (MANIFEST §7) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
