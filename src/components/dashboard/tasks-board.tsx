@@ -10,14 +10,23 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { ChevronDown, CircleDashed, Loader, UserX, X } from "lucide-react";
+import {
+  ChevronDown,
+  CircleDashed,
+  Loader,
+  Plus,
+  UserX,
+  X,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { KanbanColumn } from "@/components/dashboard/kanban-column";
 import {
   TaskEditDialog,
+  type TaskCreateInput,
   type TaskPatch,
 } from "@/components/dashboard/task-edit-dialog";
 import {
@@ -58,6 +67,7 @@ export function TasksBoard({
   const [assignee, setAssignee] = useState<AssigneeFilter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"edit" | "create">("edit");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -86,6 +96,13 @@ export function TasksBoard({
 
   function openEdit(id: string) {
     setEditingId(id);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  }
+
+  function openCreate() {
+    setEditingId(null);
+    setDialogMode("create");
     setDialogOpen(true);
   }
 
@@ -132,6 +149,26 @@ export function TasksBoard({
         err instanceof Error ? err.message : "No pude mover la tarea."
       );
     }
+  }
+
+  async function onCreate(body: TaskCreateInput) {
+    const res = await fetch("/api/tareas", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as
+        | { error?: { userMessage?: string } }
+        | null;
+      throw new Error(
+        json?.error?.userMessage ?? "No pude crear la tarea."
+      );
+    }
+    const { data } = (await res.json()) as { data: DbTareaRow };
+    const view = toTaskView(data);
+    setTasks((ts) => [view, ...ts]);
+    toast.success("Tarea creada");
   }
 
   async function onSaveEdit(id: string, patch: TaskPatch) {
@@ -187,6 +224,17 @@ export function TasksBoard({
 
   return (
     <>
+      <PageHeader
+        title="Tareas"
+        subtitle="Lo que el equipo tiene entre manos, ordenado."
+        action={
+          <Button onClick={openCreate}>
+            <Plus aria-hidden="true" />
+            Nueva tarea
+          </Button>
+        }
+      />
+
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatCard
           label="Pendientes"
@@ -285,6 +333,7 @@ export function TasksBoard({
 
       <TaskEditDialog
         task={editingTask}
+        mode={dialogMode}
         personas={assigneeOptions}
         open={dialogOpen}
         onOpenChange={(o) => {
@@ -292,6 +341,7 @@ export function TasksBoard({
           if (!o) setEditingId(null);
         }}
         onSave={onSaveEdit}
+        onCreate={onCreate}
       />
     </>
   );

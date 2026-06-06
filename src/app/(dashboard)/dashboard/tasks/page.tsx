@@ -1,7 +1,3 @@
-import { Plus } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/dashboard/page-header";
 import { TasksBoard } from "@/components/dashboard/tasks-board";
 import { tareasService } from "@/services/tareas/tareas.service";
 import { personasService } from "@/services/personas/personas.service";
@@ -34,17 +30,6 @@ export default async function TasksPage() {
 
   return (
     <div className="px-5 py-8 sm:px-8 lg:py-10">
-      <PageHeader
-        title="Tareas"
-        subtitle="Lo que el equipo tiene entre manos, ordenado."
-        action={
-          <Button disabled title="Las tareas se crean desde WhatsApp por ahora">
-            <Plus aria-hidden="true" />
-            Nueva tarea
-          </Button>
-        }
-      />
-
       <TasksBoard initialTasks={tasks} personas={personas} />
     </div>
   );

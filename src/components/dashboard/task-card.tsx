@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  MessageSquareQuote,
   UserX,
 } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
@@ -48,41 +47,46 @@ export function TaskCard({
 
   const due = dueBadge(task.fecha_limite, task.estado);
 
+  // The whole card is the drag handle AND the click target. dnd-kit's PointerSensor with
+  // distance:6 (set up in TasksBoard) suppresses the click when the gesture turns into a drag.
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onOpen(task.id);
+    }
+  }
+
   return (
     <article
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(task.id)}
+      onKeyDown={onKeyDown}
+      aria-label={`Abrir tarea: ${task.descripcion}`}
       className={cn(
-        "flex flex-col gap-3 rounded-xl bg-popover p-4 ring-1 ring-foreground/10 shadow-[var(--shadow-card)] transition-shadow",
+        "flex flex-col gap-3 rounded-xl bg-popover p-4 ring-1 ring-foreground/10 shadow-[var(--shadow-card)] outline-none transition-shadow cursor-grab active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring",
         isDragging && "opacity-50 shadow-lg"
       )}
     >
-      {/* Drag handle covers the title row + due badge — but the card-foot (avatar/source)
-          stays clickable for the modal trigger. */}
-      <button
-        type="button"
-        {...attributes}
-        {...listeners}
-        onClick={() => onOpen(task.id)}
-        className="flex flex-col gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md -m-1 p-1 cursor-grab active:cursor-grabbing"
-        aria-label={`Abrir tarea: ${task.descripcion}`}
-      >
-        <div className="flex items-start justify-between gap-2.5">
-          <p className="text-sm font-medium leading-snug text-foreground">
-            {task.descripcion}
-          </p>
-          <span
-            className={cn(
-              "mt-1 size-2 shrink-0 rounded-full",
-              priorityStyles[task.prioridad]
-            )}
-            title={`Prioridad ${priorityLabels[task.prioridad]}`}
-            aria-label={`Prioridad ${priorityLabels[task.prioridad]}`}
-          />
-        </div>
+      <div className="flex items-start justify-between gap-2.5">
+        <p className="text-sm font-medium leading-snug text-foreground">
+          {task.descripcion}
+        </p>
+        <span
+          className={cn(
+            "mt-1 size-2 shrink-0 rounded-full",
+            priorityStyles[task.prioridad]
+          )}
+          title={`Prioridad ${priorityLabels[task.prioridad]}`}
+          aria-label={`Prioridad ${priorityLabels[task.prioridad]}`}
+        />
+      </div>
 
-        {due && <DueBadge label={due.label} state={due.state} />}
-      </button>
+      {due && <DueBadge label={due.label} state={due.state} />}
 
       <div className="flex items-center justify-between gap-2 border-t border-linea pt-3">
         {task.asignado ? (
@@ -100,16 +104,6 @@ export function TaskCard({
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-clay">
             <UserX className="size-3.5" aria-hidden="true" />
             Sin responsable
-          </span>
-        )}
-
-        {task.creado_por_nombre && (
-          <span
-            className="inline-flex shrink-0 items-center gap-1 text-xs text-tinta-suave"
-            title={`Creado por ${task.creado_por_nombre}`}
-          >
-            <MessageSquareQuote className="size-3.5" aria-hidden="true" />
-            {task.creado_por_nombre}
           </span>
         )}
       </div>

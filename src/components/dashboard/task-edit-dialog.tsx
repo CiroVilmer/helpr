@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Pencil } from "lucide-react";
+import { AlertCircle, Pencil, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,18 +37,33 @@ export type TaskPatch = {
   fecha_limite?: string | null;
 };
 
+export type TaskCreateInput = {
+  descripcion: string;
+  prioridad: Prioridad;
+  estado: EstadoTarea;
+  asignado_id: string | null;
+  fecha_limite: string | null;
+};
+
+type Mode = "edit" | "create";
+
 export function TaskEditDialog({
   task,
+  mode,
   personas,
   open,
   onOpenChange,
   onSave,
+  onCreate,
 }: {
+  // In edit mode this is the source task. In create mode it's null and we use blank defaults.
   task: TaskView | null;
+  mode: Mode;
   personas: PersonaOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (id: string, patch: TaskPatch) => Promise<void>;
+  onCreate: (body: TaskCreateInput) => Promise<void>;
 }) {
   const [descripcion, setDescripcion] = useState(task?.descripcion ?? "");
   const [prioridad, setPrioridad] = useState<Prioridad>(
@@ -64,12 +79,20 @@ export function TaskEditDialog({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // React 19 pattern: cuando cambia la tarea (cliquearon otra card) reseteamos los campos del
-  // form durante el render — sin useEffect.
-  const [lastTaskId, setLastTaskId] = useState<string | null>(task?.id ?? null);
-  if ((task?.id ?? null) !== lastTaskId) {
-    setLastTaskId(task?.id ?? null);
-    if (task) {
+  // React 19 pattern: reset campos cuando el modal cambia de tarea o de modo (edit↔create).
+  // Lo hacemos durante el render usando una clave compuesta — sin useEffect.
+  const formKey = mode === "create" ? "__create__" : task?.id ?? null;
+  const [lastFormKey, setLastFormKey] = useState<string | null>(formKey);
+  if (formKey !== lastFormKey) {
+    setLastFormKey(formKey);
+    if (mode === "create") {
+      setDescripcion("");
+      setPrioridad("media");
+      setEstado("pendiente");
+      setAsignadoId("");
+      setFechaLimite("");
+      setError(null);
+    } else if (task) {
       setDescripcion(task.descripcion);
       setPrioridad(task.prioridad);
       setEstado(task.estado);
@@ -81,11 +104,35 @@ export function TaskEditDialog({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!task) return;
     setError(null);
 
-    const patch: TaskPatch = {};
     const desc = descripcion.trim();
+    if (mode === "create") {
+      if (!desc) {
+        setError("Falta la descripción.");
+        return;
+      }
+      setSaving(true);
+      try {
+        await onCreate({
+          descripcion: desc,
+          prioridad,
+          estado,
+          asignado_id: asignadoId || null,
+          fecha_limite: fechaLimite || null,
+        });
+        onOpenChange(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No pude crear la tarea.");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Edit mode: build a minimal patch with only changed fields.
+    if (!task) return;
+    const patch: TaskPatch = {};
     if (desc && desc !== task.descripcion) patch.descripcion = desc;
     if (prioridad !== task.prioridad) patch.prioridad = prioridad;
     if (estado !== task.estado) patch.estado = estado;
@@ -114,20 +161,28 @@ export function TaskEditDialog({
     }
   }
 
+  const isCreate = mode === "create";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Pencil className="size-4" aria-hidden="true" />
-              Editar tarea
+              {isCreate ? (
+                <Plus className="size-4" aria-hidden="true" />
+              ) : (
+                <Pencil className="size-4" aria-hidden="true" />
+              )}
+              {isCreate ? "Nueva tarea" : "Editar tarea"}
             </DialogTitle>
-            {task && (
-              <DialogDescription>
-                Proyecto: {task.proyecto_nombre}
-              </DialogDescription>
-            )}
+            <DialogDescription>
+              {isCreate
+                ? "Se crea en la bandeja por defecto de tu organización."
+                : task
+                  ? `Proyecto: ${task.proyecto_nombre}`
+                  : ""}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
@@ -139,8 +194,14 @@ export function TaskEditDialog({
                 id="task-desc"
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
+                placeholder={
+                  isCreate
+                    ? "Coordinar la entrega de donaciones del viernes…"
+                    : undefined
+                }
                 required
                 rows={3}
+                autoFocus={isCreate}
               />
             </div>
 
@@ -236,7 +297,7 @@ export function TaskEditDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar"}
+              {saving ? "Guardando…" : isCreate ? "Crear" : "Guardar"}
             </Button>
           </div>
         </form>

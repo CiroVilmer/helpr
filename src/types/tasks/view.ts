@@ -23,7 +23,6 @@ export type TaskView = {
   estado: EstadoTarea
   fecha_limite: string | null
   asignado: { id: string; nombre: string; initials: string } | null
-  creado_por_nombre: string | null
   proyecto_nombre: string
 }
 
@@ -69,7 +68,6 @@ export function toTaskView(row: DbTareaRow): TaskView {
             initials: initialsOf(row.asignado_nombre),
           }
         : null,
-    creado_por_nombre: row.creado_por_nombre,
     proyecto_nombre: row.proyecto_nombre,
   }
 }

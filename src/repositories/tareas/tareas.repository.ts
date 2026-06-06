@@ -85,6 +85,41 @@ export const tareasRepository = {
     return rows.length > 0
   },
 
+  async create(input: {
+    proyecto_id: string
+    creado_por_id: string | null
+    descripcion: string
+    prioridad: 'alta' | 'media' | 'baja'
+    estado: 'pendiente' | 'en_progreso' | 'hecho'
+    asignado_id: string | null
+    fecha_limite: string | null
+  }) {
+    const inserted = await db
+      .insert(tareas)
+      .values({
+        proyecto_id: input.proyecto_id,
+        creado_por_id: input.creado_por_id,
+        descripcion: input.descripcion,
+        prioridad: input.prioridad,
+        estado: input.estado,
+        asignado_id: input.asignado_id,
+        fecha_limite: input.fecha_limite,
+        origen: 'texto',
+      })
+      .returning({ id: tareas.id })
+    const id = inserted[0]?.id
+    if (!id) return null
+    const rows = await db
+      .select(tareaSelect)
+      .from(tareas)
+      .innerJoin(proyectos, eq(tareas.proyecto_id, proyectos.id))
+      .leftJoin(asignado, eq(tareas.asignado_id, asignado.id))
+      .leftJoin(creador, eq(tareas.creado_por_id, creador.id))
+      .where(eq(tareas.id, id))
+      .limit(1)
+    return rows[0] ?? null
+  },
+
   async updateById(id: string, body: TareaUpdateBody) {
     // Drizzle types $type narrowly; we set only fields explicitly present in the body.
     const patch: Record<string, unknown> = {}

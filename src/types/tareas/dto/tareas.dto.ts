@@ -31,3 +31,20 @@ export const tareaUpdateBodySchema = z
   })
 
 export type TareaUpdateBody = z.infer<typeof tareaUpdateBodySchema>
+
+// POST /api/tareas — create a task from the dashboard. The proyecto_id is resolved server-side
+// (the org's `es_bandeja` project) and creado_por_id is set from the signed-in persona.
+// origen is hard-coded to 'texto' (dashboard-originated tasks aren't audio).
+export const tareaCreateBodySchema = z.object({
+  descripcion: z.string().trim().min(1, 'Falta la descripción.'),
+  prioridad: z.enum(['alta', 'media', 'baja']).default('media'),
+  estado: z.enum(['pendiente', 'en_progreso', 'hecho']).default('pendiente'),
+  asignado_id: z.uuid().nullable().optional(),
+  fecha_limite: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Usá formato YYYY-MM-DD.')
+    .nullable()
+    .optional(),
+})
+
+export type TareaCreateBody = z.infer<typeof tareaCreateBodySchema>
