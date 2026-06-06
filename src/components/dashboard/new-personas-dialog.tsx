@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { SelectMenu } from "@/components/dashboard/select-menu";
 
 type Rol = "admin" | "volunteer";
 
@@ -304,18 +305,19 @@ function RolField({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="text-xs">
+      <Label htmlFor={id} className="text-xs font-medium text-tinta-suave">
         Rol
       </Label>
-      <select
+      <SelectMenu
         id={id}
+        ariaLabel="Rol"
         value={value}
-        onChange={(e) => onChange(e.target.value as Rol)}
-        className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <option value="volunteer">Voluntaria/o</option>
-        <option value="admin">Admin (puede invitar)</option>
-      </select>
+        onValueChange={(v) => onChange(v as Rol)}
+        options={[
+          { value: "volunteer", label: "Voluntaria/o" },
+          { value: "admin", label: "Admin (puede invitar)" },
+        ]}
+      />
     </div>
   );
 }
@@ -341,7 +343,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="text-xs">
+      <Label htmlFor={id} className="text-xs font-medium text-tinta-suave">
         {label}
         {required && <span className="ml-0.5 text-clay">*</span>}
       </Label>
