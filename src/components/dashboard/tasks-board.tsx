@@ -1,6 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { toast } from "sonner";
 import { ChevronDown, CircleDashed, Loader, UserX, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -8,15 +17,26 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { KanbanColumn } from "@/components/dashboard/kanban-column";
 import {
+  TaskEditDialog,
+  type TaskPatch,
+} from "@/components/dashboard/task-edit-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Priority, Task } from "@/components/dashboard/data";
+import {
+  ESTADO_LABELS,
+  type DbTareaRow,
+  type PersonaOption,
+  type TaskView,
+  toTaskView,
+} from "@/types/tasks/view";
+import type { EstadoTarea, Prioridad } from "@/db/schema/tareas";
 
-type PriorityFilter = Priority | "all";
+type PriorityFilter = Prioridad | "all";
 type AssigneeFilter = string | "all" | "none";
 
 const PRIORITY_LABEL: Record<PriorityFilter, string> = {
@@ -26,47 +46,156 @@ const PRIORITY_LABEL: Record<PriorityFilter, string> = {
   baja: "Baja",
 };
 
-export function TasksBoard({ tasks }: { tasks: Task[] }) {
+export function TasksBoard({
+  initialTasks,
+  personas,
+}: {
+  initialTasks: TaskView[];
+  personas: PersonaOption[];
+}) {
+  const [tasks, setTasks] = useState<TaskView[]>(initialTasks);
   const [priority, setPriority] = useState<PriorityFilter>("all");
   const [assignee, setAssignee] = useState<AssigneeFilter>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const assignees = useMemo(() => {
-    const names = new Set<string>();
-    for (const t of tasks) if (t.assignee) names.add(t.assignee.name);
-    return Array.from(names).sort((a, b) => a.localeCompare(b, "es"));
-  }, [tasks]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor)
+  );
 
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
-      if (priority !== "all" && t.priority !== priority) return false;
-      if (assignee === "none") return t.assignee === null;
-      if (assignee !== "all" && t.assignee?.name !== assignee) return false;
+      if (priority !== "all" && t.prioridad !== priority) return false;
+      if (assignee === "none") return t.asignado === null;
+      if (assignee !== "all" && t.asignado?.id !== assignee) return false;
       return true;
     });
   }, [tasks, priority, assignee]);
 
-  const todo = filtered.filter((t) => t.status === "todo");
-  const doing = filtered.filter((t) => t.status === "doing");
-  const done = filtered.filter((t) => t.status === "done");
+  const pendiente = filtered.filter((t) => t.estado === "pendiente");
+  const enProgreso = filtered.filter((t) => t.estado === "en_progreso");
+  const hecho = filtered.filter((t) => t.estado === "hecho");
   const sinResponsable = filtered.filter(
-    (t) => !t.assignee && t.status !== "done"
+    (t) => !t.asignado && t.estado !== "hecho"
   ).length;
 
+  const editingTask = editingId
+    ? tasks.find((t) => t.id === editingId) ?? null
+    : null;
+
+  function openEdit(id: string) {
+    setEditingId(id);
+    setDialogOpen(true);
+  }
+
+  async function patchTask(id: string, patch: TaskPatch) {
+    const res = await fetch(`/api/tareas/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as
+        | { error?: { userMessage?: string } }
+        | null;
+      throw new Error(
+        json?.error?.userMessage ?? "No pude actualizar la tarea."
+      );
+    }
+    return (await res.json()) as { data: DbTareaRow };
+  }
+
+  async function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over) return;
+    const overId = String(over.id);
+    if (!overId.startsWith("column:")) return;
+    const targetEstado = overId.slice("column:".length) as EstadoTarea;
+
+    const task = tasks.find((t) => t.id === active.id);
+    if (!task || task.estado === targetEstado) return;
+
+    const prev = tasks;
+    // Optimistic: move now, reconcile (or rollback) when the server replies.
+    setTasks((ts) =>
+      ts.map((t) => (t.id === task.id ? { ...t, estado: targetEstado } : t))
+    );
+    try {
+      const { data } = await patchTask(task.id, { estado: targetEstado });
+      setTasks((ts) =>
+        ts.map((t) => (t.id === task.id ? toTaskView(data) : t))
+      );
+    } catch (err) {
+      setTasks(prev);
+      toast.error(
+        err instanceof Error ? err.message : "No pude mover la tarea."
+      );
+    }
+  }
+
+  async function onSaveEdit(id: string, patch: TaskPatch) {
+    const prev = tasks;
+    // Optimistic merge so the modal closes instantly.
+    setTasks((ts) =>
+      ts.map((t) => {
+        if (t.id !== id) return t;
+        const next: TaskView = { ...t };
+        if (patch.descripcion !== undefined) next.descripcion = patch.descripcion;
+        if (patch.prioridad !== undefined) next.prioridad = patch.prioridad;
+        if (patch.estado !== undefined) next.estado = patch.estado;
+        if (patch.fecha_limite !== undefined)
+          next.fecha_limite = patch.fecha_limite;
+        if (patch.asignado_id !== undefined) {
+          if (patch.asignado_id === null) {
+            next.asignado = null;
+          } else {
+            const p = personas.find((pp) => pp.id === patch.asignado_id);
+            next.asignado = p
+              ? { id: p.id, nombre: p.nombre, initials: p.initials }
+              : t.asignado;
+          }
+        }
+        return next;
+      })
+    );
+
+    try {
+      const { data } = await patchTask(id, patch);
+      setTasks((ts) =>
+        ts.map((t) => (t.id === id ? toTaskView(data) : t))
+      );
+      toast.success("Tarea actualizada");
+    } catch (err) {
+      setTasks(prev);
+      throw err;
+    }
+  }
+
+  const assigneeOptions = useMemo(() => {
+    return personas
+      .slice()
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  }, [personas]);
   const hasFilters = priority !== "all" || assignee !== "all";
   const assigneeLabel =
     assignee === "all"
       ? "Todas"
       : assignee === "none"
       ? "Sin responsable"
-      : assignee;
+      : assigneeOptions.find((p) => p.id === assignee)?.nombre ?? "Todas";
 
   return (
     <>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Pendientes" value={todo.length} icon={CircleDashed} />
+        <StatCard
+          label="Pendientes"
+          value={pendiente.length}
+          icon={CircleDashed}
+        />
         <StatCard
           label="En curso"
-          value={doing.length}
+          value={enProgreso.length}
           icon={Loader}
           tone="warning"
         />
@@ -108,9 +237,9 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
             <DropdownMenuRadioItem value="none">
               Sin responsable
             </DropdownMenuRadioItem>
-            {assignees.map((name) => (
-              <DropdownMenuRadioItem key={name} value={name}>
-                {name}
+            {assigneeOptions.map((p) => (
+              <DropdownMenuRadioItem key={p.id} value={p.id}>
+                {p.nombre}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
@@ -131,11 +260,39 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
         )}
       </div>
 
-      <div className="mt-6 grid gap-5 md:grid-cols-3">
-        <KanbanColumn title="Por hacer" tasks={todo} />
-        <KanbanColumn title="Haciendo" tasks={doing} />
-        <KanbanColumn title="Listo" tasks={done} />
-      </div>
+      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+        <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <KanbanColumn
+            title={ESTADO_LABELS.pendiente}
+            estado="pendiente"
+            tasks={pendiente}
+            onOpen={openEdit}
+          />
+          <KanbanColumn
+            title={ESTADO_LABELS.en_progreso}
+            estado="en_progreso"
+            tasks={enProgreso}
+            onOpen={openEdit}
+          />
+          <KanbanColumn
+            title={ESTADO_LABELS.hecho}
+            estado="hecho"
+            tasks={hecho}
+            onOpen={openEdit}
+          />
+        </div>
+      </DndContext>
+
+      <TaskEditDialog
+        task={editingTask}
+        personas={assigneeOptions}
+        open={dialogOpen}
+        onOpenChange={(o) => {
+          setDialogOpen(o);
+          if (!o) setEditingId(null);
+        }}
+        onSave={onSaveEdit}
+      />
     </>
   );
 }

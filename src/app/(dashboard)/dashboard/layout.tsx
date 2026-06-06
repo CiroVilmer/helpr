@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentOrgContext } from "@/lib/auth/org-context";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { NoOrgEmptyState } from "@/components/dashboard/no-org-empty-state";
 
 // Auth gate runs per request (getUser reads cookies) - never prerender this subtree,
 // so `next build` does not require Supabase keys at build time.
@@ -19,6 +21,12 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+
+  // El persona-link via auth_id da el organizacion_id (ver lib/auth/org-context.ts).
+  const orgCtx = await getCurrentOrgContext();
+  if (!orgCtx) {
+    return <NoOrgEmptyState userEmail={user.email ?? ""} />;
+  }
 
   return (
     <div className="min-h-dvh bg-crema-base">

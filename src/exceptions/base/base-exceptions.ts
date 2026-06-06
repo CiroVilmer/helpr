@@ -23,3 +23,15 @@ export class NotFoundException extends BaseException {
     super(message, 404, userMessage)
   }
 }
+
+export class ForbiddenException extends BaseException {
+  constructor(message = 'Forbidden', userMessage = 'No tenés acceso a este recurso.') {
+    super(message, 403, userMessage)
+  }
+}
+
+export class UnauthorizedException extends BaseException {
+  constructor(message = 'Unauthorized', userMessage = 'Tenés que iniciar sesión.') {
+    super(message, 401, userMessage)
+  }
+}

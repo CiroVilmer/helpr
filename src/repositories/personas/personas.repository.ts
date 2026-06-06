@@ -26,4 +26,50 @@ export const personasRepository = {
     }))
     return db.insert(personas).values(rows).returning()
   },
+
+  async findById(id: string) {
+    const rows = await db.select().from(personas).where(eq(personas.id, id)).limit(1)
+    return rows[0] ?? null
+  },
+
+  async findByAuthId(authId: string) {
+    const rows = await db
+      .select()
+      .from(personas)
+      .where(eq(personas.auth_id, authId))
+      .limit(1)
+    return rows[0] ?? null
+  },
+
+  async linkAuth(personaId: string, authId: string) {
+    const rows = await db
+      .update(personas)
+      .set({ auth_id: authId })
+      .where(eq(personas.id, personaId))
+      .returning()
+    return rows[0] ?? null
+  },
+
+  async hasAdmin(organizacionId: string): Promise<boolean> {
+    const rows = await db
+      .select({ id: personas.id })
+      .from(personas)
+      .where(
+        and(
+          eq(personas.organizacion_id, organizacionId),
+          eq(personas.rol, 'admin'),
+        ),
+      )
+      .limit(1)
+    return rows.length > 0
+  },
+
+  async setRol(personaId: string, rol: 'admin' | 'volunteer') {
+    const rows = await db
+      .update(personas)
+      .set({ rol })
+      .where(eq(personas.id, personaId))
+      .returning()
+    return rows[0] ?? null
+  },
 }

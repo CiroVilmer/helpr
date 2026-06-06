@@ -15,8 +15,16 @@ const personaInputSchema = z.object({
   nombre: z.string().trim().min(1),
   apellido: z.string().trim().min(1).optional(),
   telefono: z.string().trim().min(1),
-  rol: z.string().trim().min(1).optional(),
+  rol: z.enum(['admin', 'volunteer']).default('volunteer'),
 })
+
+// Body for POST /api/personas (admin bulk-create). The organizacion comes from the signed-in
+// user's persona link (see lib/auth/org-context.ts) — never trust an org id from the body.
+export const personasCreateBodySchema = z.object({
+  personas: z.array(personaInputSchema).min(1).max(50),
+})
+
+export type PersonasCreateBody = z.infer<typeof personasCreateBodySchema>
 
 export const personasOnboardingSchema = z.object({
   organizacionId: z.uuid(),

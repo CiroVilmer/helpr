@@ -3,10 +3,34 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { TasksBoard } from "@/components/dashboard/tasks-board";
-import { dashboardService } from "@/services/dashboard/dashboard.service";
+import { tareasService } from "@/services/tareas/tareas.service";
+import { personasService } from "@/services/personas/personas.service";
+import { getCurrentOrgContext } from "@/lib/auth/org-context";
+import {
+  initialsOf,
+  toTaskView,
+  type PersonaOption,
+} from "@/types/tasks/view";
+
+export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
-  const tasks = await dashboardService.getTasks();
+  const ctx = await getCurrentOrgContext();
+  if (!ctx) {
+    // El layout muestra un empty-state cuando no hay contexto; este return es por TS.
+    return null;
+  }
+
+  const [rows, personasRows] = await Promise.all([
+    tareasService.list({ organizacionId: ctx.organizacionId }),
+    personasService.list({ organizacionId: ctx.organizacionId, activo: true }),
+  ]);
+
+  const tasks = rows.map(toTaskView);
+  const personas: PersonaOption[] = personasRows.map((p) => {
+    const nombre = p.apellido ? `${p.nombre} ${p.apellido}` : p.nombre;
+    return { id: p.id, nombre, initials: initialsOf(nombre) };
+  });
 
   return (
     <div className="px-5 py-8 sm:px-8 lg:py-10">
@@ -14,14 +38,14 @@ export default async function TasksPage() {
         title="Tareas"
         subtitle="Lo que el equipo tiene entre manos, ordenado."
         action={
-          <Button>
+          <Button disabled title="Las tareas se crean desde WhatsApp por ahora">
             <Plus aria-hidden="true" />
             Nueva tarea
           </Button>
         }
       />
 
-      <TasksBoard tasks={tasks} />
+      <TasksBoard initialTasks={tasks} personas={personas} />
     </div>
   );
 }
