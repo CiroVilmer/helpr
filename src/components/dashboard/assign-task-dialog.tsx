@@ -99,7 +99,7 @@ export function AssignTaskDialog({
         type="button"
         variant="outline"
         size="sm"
-        className="w-full opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+        className="w-full"
         onClick={() => setOpen(true)}
       >
         <UserPlus aria-hidden="true" />
