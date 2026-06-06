@@ -17,8 +17,12 @@ export const tareas = pgTable('tareas', {
   proyecto_id: uuid('proyecto_id')
     .notNull()
     .references(() => proyectos.id),
-  asignado_id: uuid('asignado_id').references(() => personas.id),
-  creado_por_id: uuid('creado_por_id').references(() => personas.id),
+  asignado_id: uuid('asignado_id').references(() => personas.id, {
+    onDelete: 'set null',
+  }),
+  creado_por_id: uuid('creado_por_id').references(() => personas.id, {
+    onDelete: 'set null',
+  }),
   descripcion: text('descripcion').notNull(),
   prioridad: text('prioridad').$type<Prioridad>().default('media'),
   estado: text('estado').$type<EstadoTarea>().default('pendiente'),

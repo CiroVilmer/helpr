@@ -11,8 +11,12 @@ export const tareas_borrador = pgTable('tareas_borrador', {
   descripcion: text('descripcion').notNull(),
   prioridad: text('prioridad').default('media'),
   fecha_limite: date('fecha_limite'),
-  asignado_id: uuid('asignado_id').references(() => personas.id),
-  creado_por_id: uuid('creado_por_id').references(() => personas.id),
+  asignado_id: uuid('asignado_id').references(() => personas.id, {
+    onDelete: 'set null',
+  }),
+  creado_por_id: uuid('creado_por_id').references(() => personas.id, {
+    onDelete: 'set null',
+  }),
   origen: text('origen').default('audio'),
   estado: text('estado').default('esperando'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
