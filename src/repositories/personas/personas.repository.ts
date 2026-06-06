@@ -3,7 +3,7 @@ import 'server-only'
 import { and, asc, eq, type SQL } from 'drizzle-orm'
 import { db } from '@/db'
 import { personas } from '@/db/schema'
-import type { PersonasQuery } from '@/types/personas/dto/personas.dto'
+import type { PersonasQuery, PersonaOnboardingItem } from '@/types/personas/dto/personas.dto'
 
 export const personasRepository = {
   list(q: PersonasQuery) {
@@ -14,5 +14,16 @@ export const personasRepository = {
       .from(personas)
       .where(and(...conds))
       .orderBy(asc(personas.nombre))
+  },
+
+  createMany(organizacionId: string, items: PersonaOnboardingItem[]) {
+    const rows = items.map((p) => ({
+      organizacion_id: organizacionId,
+      nombre: p.nombre,
+      apellido: p.apellido,
+      telefono: p.telefono,
+      rol: p.rol,
+    }))
+    return db.insert(personas).values(rows).returning()
   },
 }

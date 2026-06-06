@@ -9,6 +9,7 @@ export const personas = pgTable('personas', {
     .notNull()
     .references(() => organizaciones.id),
   nombre: text('nombre').notNull(),
+  apellido: text('apellido'),
   telefono: text('telefono').notNull().unique(),
   rol: text('rol'),
   activo: boolean('activo').default(true),
