@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { CircleDashed, Loader, Plus, UserX, X } from "lucide-react";
+import { CalendarClock, FolderKanban, Plus, UserX, X } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
   ESTADO_LABELS,
   type DbTareaRow,
   type PersonaOption,
+  type ProjectOption,
   type TaskView,
   toTaskView,
 } from "@/types/tasks/view";
@@ -35,17 +36,21 @@ import type { EstadoTarea, Prioridad } from "@/db/schema/tareas";
 
 type PriorityFilter = Prioridad | "all";
 type AssigneeFilter = string | "all" | "none";
+type ProjectFilter = string | "all";
 
 export function TasksBoard({
   initialTasks,
   personas,
+  projects,
 }: {
   initialTasks: TaskView[];
   personas: PersonaOption[];
+  projects: ProjectOption[];
 }) {
   const [tasks, setTasks] = useState<TaskView[]>(initialTasks);
   const [priority, setPriority] = useState<PriorityFilter>("all");
   const [assignee, setAssignee] = useState<AssigneeFilter>("all");
+  const [project, setProject] = useState<ProjectFilter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"edit" | "create">("edit");
@@ -96,15 +101,30 @@ export function TasksBoard({
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
       if (priority !== "all" && t.prioridad !== priority) return false;
-      if (assignee === "none") return t.asignado === null;
-      if (assignee !== "all" && t.asignado?.id !== assignee) return false;
+      if (assignee === "none" && t.asignado !== null) return false;
+      if (
+        assignee !== "all" &&
+        assignee !== "none" &&
+        t.asignado?.id !== assignee
+      )
+        return false;
+      if (project !== "all" && t.proyecto_id !== project) return false;
       return true;
     });
-  }, [tasks, priority, assignee]);
+  }, [tasks, priority, assignee, project]);
 
   const pendiente = filtered.filter((t) => t.estado === "pendiente");
   const enProgreso = filtered.filter((t) => t.estado === "en_progreso");
   const hecho = filtered.filter((t) => t.estado === "hecho");
+  const unfinished = filtered.filter((t) => t.estado !== "hecho");
+  const proyectosEnCurso = new Set(unfinished.map((t) => t.proyecto_id)).size;
+  const now = new Date();
+  const today = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+  const vencenHoy = unfinished.filter((t) => t.fecha_limite === today).length;
   const sinResponsable = filtered.filter(
     (t) => !t.asignado && t.estado !== "hecho"
   ).length;
@@ -233,7 +253,8 @@ export function TasksBoard({
       .slice()
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   }, [personas]);
-  const hasFilters = priority !== "all" || assignee !== "all";
+  const hasFilters =
+    priority !== "all" || assignee !== "all" || project !== "all";
 
   return (
     <>
@@ -250,14 +271,14 @@ export function TasksBoard({
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="Pendientes"
-          value={pendiente.length}
-          icon={CircleDashed}
+          label="Proyectos en curso"
+          value={proyectosEnCurso}
+          icon={FolderKanban}
         />
         <StatCard
-          label="En curso"
-          value={enProgreso.length}
-          icon={Loader}
+          label="Vencen hoy"
+          value={vencenHoy}
+          icon={CalendarClock}
           tone="warning"
         />
         <StatCard
@@ -296,6 +317,18 @@ export function TasksBoard({
           ]}
         />
 
+        <SelectMenu
+          variant="pill"
+          label="Proyecto"
+          active={project !== "all"}
+          value={project}
+          onValueChange={(v) => setProject(v as ProjectFilter)}
+          options={[
+            { value: "all", label: "Todos" },
+            ...projects.map((p) => ({ value: p.id, label: p.nombre })),
+          ]}
+        />
+
         {hasFilters && (
           <Button
             variant="ghost"
@@ -303,6 +336,7 @@ export function TasksBoard({
             onClick={() => {
               setPriority("all");
               setAssignee("all");
+              setProject("all");
             }}
           >
             <X aria-hidden="true" />

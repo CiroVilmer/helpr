@@ -368,7 +368,7 @@ function CreatedPanel({
   onClose: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <Check className="size-4 text-bosque" aria-hidden="true" />
@@ -382,7 +382,7 @@ function CreatedPanel({
         </DialogDescription>
       </DialogHeader>
 
-      <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
+      <ul className="flex min-w-0 max-h-[50vh] flex-col gap-2 overflow-y-auto">
         {created.map((p) => (
           <InviteRow key={p.id} persona={p} />
         ))}
@@ -416,11 +416,11 @@ function InviteRow({ persona }: { persona: CreatedPersona }) {
   }
 
   return (
-    <li className="rounded-lg border border-linea p-3">
+    <li className="min-w-0 rounded-lg border border-linea p-3">
       <p className="text-sm font-medium text-foreground">{fullName}</p>
       <p className="text-xs text-tinta-suave">{persona.telefono}</p>
-      <div className="mt-2 flex items-center gap-2">
-        <code className="flex-1 truncate rounded-md bg-muted px-2 py-1.5 font-mono text-xs text-tinta-suave">
+      <div className="mt-2 flex min-w-0 items-center gap-2">
+        <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-2 py-1.5 font-mono text-xs text-tinta-suave">
           {url}
         </code>
         <Button

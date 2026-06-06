@@ -10,7 +10,7 @@ const toneStyles: Record<Tone, string> = {
   risk: "bg-clay/15 text-clay",
 };
 
-/** Tarjeta de métrica del dashboard (Pendientes / En curso / Sin responsable). */
+/** Tarjeta de métrica del dashboard. */
 export function StatCard({
   label,
   value,
