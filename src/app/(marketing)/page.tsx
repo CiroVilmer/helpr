@@ -261,7 +261,7 @@ function HeroMock() {
           title="Coordinar la entrega de donaciones — viernes"
           detail="Confirmar cantidad de cajas antes del jueves."
           confidence="alta"
-          source={{ author: "Lu", when: "mar 14:32" }}
+          source={{ author: "Ranzo", when: "mar 14:32" }}
         />
       </div>
     </div>
