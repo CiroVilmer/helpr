@@ -36,6 +36,7 @@ export type PersonaOption = {
 export type ProjectOption = {
   id: string
   nombre: string
+  es_bandeja: boolean
 }
 
 export type DbTareaRow = {

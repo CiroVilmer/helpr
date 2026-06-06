@@ -85,6 +85,20 @@ export const tareasRepository = {
     return rows.length > 0
   },
 
+  async projectIsInOrg(projectId: string, organizacionId: string): Promise<boolean> {
+    const rows = await db
+      .select({ id: proyectos.id })
+      .from(proyectos)
+      .where(
+        and(
+          eq(proyectos.id, projectId),
+          eq(proyectos.organizacion_id, organizacionId),
+        ),
+      )
+      .limit(1)
+    return rows.length > 0
+  },
+
   async create(input: {
     proyecto_id: string
     creado_por_id: string | null
@@ -124,6 +138,7 @@ export const tareasRepository = {
     // Drizzle types $type narrowly; we set only fields explicitly present in the body.
     const patch: Record<string, unknown> = {}
     if (body.descripcion !== undefined) patch.descripcion = body.descripcion
+    if (body.proyecto_id !== undefined) patch.proyecto_id = body.proyecto_id
     if (body.prioridad !== undefined) patch.prioridad = body.prioridad
     if (body.estado !== undefined) patch.estado = body.estado
     if (body.asignado_id !== undefined) patch.asignado_id = body.asignado_id

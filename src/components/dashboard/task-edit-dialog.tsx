@@ -19,6 +19,7 @@ import {
   ESTADO_LABELS,
   ESTADO_ORDER,
   type PersonaOption,
+  type ProjectOption,
   type TaskView,
 } from "@/types/tasks/view";
 import type { EstadoTarea, Prioridad } from "@/db/schema/tareas";
@@ -32,6 +33,7 @@ const PRIORIDAD_LABEL: Record<Prioridad, string> = {
 
 export type TaskPatch = {
   descripcion?: string;
+  proyecto_id?: string;
   prioridad?: Prioridad;
   estado?: EstadoTarea;
   asignado_id?: string | null;
@@ -40,6 +42,7 @@ export type TaskPatch = {
 
 export type TaskCreateInput = {
   descripcion: string;
+  proyecto_id: string;
   prioridad: Prioridad;
   estado: EstadoTarea;
   asignado_id: string | null;
@@ -52,6 +55,7 @@ export function TaskEditDialog({
   task,
   mode,
   personas,
+  projects,
   open,
   onOpenChange,
   onSave,
@@ -61,12 +65,18 @@ export function TaskEditDialog({
   task: TaskView | null;
   mode: Mode;
   personas: PersonaOption[];
+  projects: ProjectOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (id: string, patch: TaskPatch) => Promise<void>;
   onCreate: (body: TaskCreateInput) => Promise<void>;
 }) {
+  const defaultProjectId =
+    projects.find((project) => project.es_bandeja)?.id ?? projects[0]?.id ?? "";
   const [descripcion, setDescripcion] = useState(task?.descripcion ?? "");
+  const [projectId, setProjectId] = useState(
+    task?.proyecto_id ?? defaultProjectId
+  );
   const [prioridad, setPrioridad] = useState<Prioridad>(
     task?.prioridad ?? "media"
   );
@@ -88,6 +98,7 @@ export function TaskEditDialog({
     setLastFormKey(formKey);
     if (mode === "create") {
       setDescripcion("");
+      setProjectId(defaultProjectId);
       setPrioridad("media");
       setEstado("pendiente");
       setAsignadoId("");
@@ -95,6 +106,7 @@ export function TaskEditDialog({
       setError(null);
     } else if (task) {
       setDescripcion(task.descripcion);
+      setProjectId(task.proyecto_id);
       setPrioridad(task.prioridad);
       setEstado(task.estado);
       setAsignadoId(task.asignado?.id ?? "");
@@ -113,10 +125,15 @@ export function TaskEditDialog({
         setError("Falta la descripción.");
         return;
       }
+      if (!projectId) {
+        setError("Elegí un proyecto.");
+        return;
+      }
       setSaving(true);
       try {
         await onCreate({
           descripcion: desc,
+          proyecto_id: projectId,
           prioridad,
           estado,
           asignado_id: asignadoId || null,
@@ -135,6 +152,7 @@ export function TaskEditDialog({
     if (!task) return;
     const patch: TaskPatch = {};
     if (desc && desc !== task.descripcion) patch.descripcion = desc;
+    if (projectId !== task.proyecto_id) patch.proyecto_id = projectId;
     if (prioridad !== task.prioridad) patch.prioridad = prioridad;
     if (estado !== task.estado) patch.estado = estado;
 
@@ -179,10 +197,8 @@ export function TaskEditDialog({
             </DialogTitle>
             <DialogDescription>
               {isCreate
-                ? "Se crea en la bandeja por defecto de tu organización."
-                : task
-                  ? `Proyecto: ${task.proyecto_nombre}`
-                  : ""}
+                ? "Completá los datos y elegí dónde organizarla."
+                : "Actualizá los datos de la tarea."}
             </DialogDescription>
           </DialogHeader>
 
@@ -210,6 +226,26 @@ export function TaskEditDialog({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <Label
+                  htmlFor="task-project"
+                  className="text-xs font-medium text-tinta-suave"
+                >
+                  Proyecto
+                </Label>
+                <SelectMenu
+                  id="task-project"
+                  ariaLabel="Proyecto"
+                  value={projectId}
+                  onValueChange={setProjectId}
+                  placeholder="Elegí un proyecto"
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: project.nombre,
+                  }))}
+                />
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <Label
                   htmlFor="task-estado"

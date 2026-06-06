@@ -1,5 +1,5 @@
 // GET   /api/tareas/:id  -> single task with project + assignee + creator names
-// PATCH /api/tareas/:id  -> partial update from the dashboard (status, priority, assignee, due, description).
+// PATCH /api/tareas/:id  -> partial update from the dashboard (project, status, priority, assignee, due, description).
 //                          Org membership is verified server-side from the signed-in user's persona link.
 import { z } from 'zod'
 import { routeHandler } from '@/lib/handlers/route-handler'

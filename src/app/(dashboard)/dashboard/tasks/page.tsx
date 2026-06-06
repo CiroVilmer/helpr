@@ -37,6 +37,7 @@ export default async function TasksPage() {
   const projects: ProjectOption[] = proyectosRows.map((p) => ({
     id: p.id,
     nombre: p.nombre,
+    es_bandeja: p.es_bandeja ?? false,
   }));
 
   return (

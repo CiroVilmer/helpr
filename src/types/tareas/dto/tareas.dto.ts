@@ -12,11 +12,13 @@ export const tareasQuerySchema = z.object({
 export type TareasQuery = z.infer<typeof tareasQuerySchema>
 
 // PATCH /api/tareas/[id] — partial update from the dashboard. At least one field required.
+// proyecto_id: uuid -> move the task to another project in the same organization.
 // asignado_id: uuid -> set, null -> clear, omitted -> no change.
 // fecha_limite: 'YYYY-MM-DD' -> set, null -> clear, omitted -> no change.
 export const tareaUpdateBodySchema = z
   .object({
     descripcion: z.string().trim().min(1).optional(),
+    proyecto_id: z.uuid().optional(),
     prioridad: z.enum(['alta', 'media', 'baja']).optional(),
     estado: z.enum(['pendiente', 'en_progreso', 'hecho']).optional(),
     asignado_id: z.uuid().nullable().optional(),
@@ -32,11 +34,12 @@ export const tareaUpdateBodySchema = z
 
 export type TareaUpdateBody = z.infer<typeof tareaUpdateBodySchema>
 
-// POST /api/tareas — create a task from the dashboard. The proyecto_id is resolved server-side
-// (the org's `es_bandeja` project) and creado_por_id is set from the signed-in persona.
+// POST /api/tareas — create a task from the dashboard. proyecto_id is selected by the user and
+// validated against their organization; creado_por_id comes from the signed-in persona.
 // origen is hard-coded to 'texto' (dashboard-originated tasks aren't audio).
 export const tareaCreateBodySchema = z.object({
   descripcion: z.string().trim().min(1, 'Falta la descripción.'),
+  proyecto_id: z.uuid(),
   prioridad: z.enum(['alta', 'media', 'baja']).default('media'),
   estado: z.enum(['pendiente', 'en_progreso', 'hecho']).default('pendiente'),
   asignado_id: z.uuid().nullable().optional(),

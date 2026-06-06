@@ -218,6 +218,13 @@ export function TasksBoard({
         if (t.id !== id) return t;
         const next: TaskView = { ...t };
         if (patch.descripcion !== undefined) next.descripcion = patch.descripcion;
+        if (patch.proyecto_id !== undefined) {
+          const selectedProject = projects.find(
+            (projectOption) => projectOption.id === patch.proyecto_id
+          );
+          next.proyecto_id = patch.proyecto_id;
+          if (selectedProject) next.proyecto_nombre = selectedProject.nombre;
+        }
         if (patch.prioridad !== undefined) next.prioridad = patch.prioridad;
         if (patch.estado !== undefined) next.estado = patch.estado;
         if (patch.fecha_limite !== undefined)
@@ -372,6 +379,7 @@ export function TasksBoard({
         task={editingTask}
         mode={dialogMode}
         personas={assigneeOptions}
+        projects={projects}
         open={dialogOpen}
         onOpenChange={(o) => {
           setDialogOpen(o);

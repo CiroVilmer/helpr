@@ -1,6 +1,5 @@
 import 'server-only'
 import { tareasRepository } from '@/repositories/tareas/tareas.repository'
-import { proyectosRepository } from '@/repositories/proyectos/proyectos.repository'
 import {
   ForbiddenException,
   NotFoundException,
@@ -23,23 +22,21 @@ export const tareasService = {
     return tarea
   },
 
-  // Creates a task in the org's default tray project (proyectos.es_bandeja = true). Validates
-  // that any asignado_id belongs to the same org. creado_por_id is the signed-in persona.
+  // Creates a task in the selected project. Validates that the project and any asignado_id
+  // belong to the same org. creado_por_id is the signed-in persona.
   async create(
     organizacionId: string,
     creadoPorId: string,
     body: TareaCreateBody,
   ) {
-    const bandejas = await proyectosRepository.list({
+    const projectOk = await tareasRepository.projectIsInOrg(
+      body.proyecto_id,
       organizacionId,
-      activo: true,
-      esBandeja: true,
-    })
-    const bandeja = bandejas[0]
-    if (!bandeja) {
+    )
+    if (!projectOk) {
       throw new ValidationException(
-        `Org ${organizacionId} has no es_bandeja project`,
-        'Tu organización todavía no tiene una bandeja por defecto. Avisale al admin.',
+        `Project ${body.proyecto_id} not in org ${organizacionId}`,
+        'El proyecto seleccionado no pertenece a tu organización.',
       )
     }
 
@@ -57,7 +54,7 @@ export const tareasService = {
     }
 
     const created = await tareasRepository.create({
-      proyecto_id: bandeja.id,
+      proyecto_id: body.proyecto_id,
       creado_por_id: creadoPorId,
       descripcion: body.descripcion,
       prioridad: body.prioridad,
@@ -74,8 +71,8 @@ export const tareasService = {
     return created
   },
 
-  // Updates a tarea after verifying it belongs to organizacionId (and that any new asignado
-  // also belongs to the same org). Returns the updated row with names resolved.
+  // Updates a tarea after verifying it belongs to organizacionId. Any new project or asignado
+  // must also belong to the same org. Returns the updated row with names resolved.
   async update(id: string, organizacionId: string, body: TareaUpdateBody) {
     const taskOrg = await tareasRepository.getOrganizacionId(id)
     if (!taskOrg) throw new NotFoundException(`Tarea ${id} no existe`)
@@ -95,6 +92,19 @@ export const tareasService = {
         throw new ValidationException(
           `Asignado ${body.asignado_id} not in org ${organizacionId}`,
           'La persona asignada no pertenece a tu organización.',
+        )
+      }
+    }
+
+    if (body.proyecto_id) {
+      const ok = await tareasRepository.projectIsInOrg(
+        body.proyecto_id,
+        organizacionId,
+      )
+      if (!ok) {
+        throw new ValidationException(
+          `Project ${body.proyecto_id} not in org ${organizacionId}`,
+          'El proyecto seleccionado no pertenece a tu organización.',
         )
       }
     }

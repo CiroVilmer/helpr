@@ -1,6 +1,6 @@
 // GET  /api/tareas?organizacionId=<uuid>&proyectoId=&asignadoId=&estado=&prioridad=
 // POST /api/tareas  — create a task from the dashboard. Org + creator are derived from the
-//                     signed-in persona (org-context); proyecto_id is the org's es_bandeja.
+//                     signed-in persona; proyecto_id is selected and validated in that org.
 import { routeHandler } from '@/lib/handlers/route-handler'
 import { tareasService } from '@/services/tareas/tareas.service'
 import { getCurrentOrgContext } from '@/lib/auth/org-context'
