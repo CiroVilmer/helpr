@@ -90,5 +90,17 @@ export function dueBadge(
   if (days === 0) return { label: 'Vence hoy', state: 'soon' }
   if (days === 1) return { label: 'Vence mañana', state: 'soon' }
   if (days <= 3) return { label: `Vence en ${days} días`, state: 'soon' }
-  return { label: `Vence en ${days} días`, state: 'ok' }
+  return { label: `Vence en ${humanizeDays(days)}`, state: 'ok' }
+}
+
+// Acorta una cantidad de días a la unidad más grande posible (días → semanas → meses → años).
+function humanizeDays(days: number): string {
+  if (days < 14) return plural(days, 'día', 'días')
+  if (days < 30) return plural(Math.round(days / 7), 'semana', 'semanas')
+  if (days < 365) return plural(Math.round(days / 30), 'mes', 'meses')
+  return plural(Math.round(days / 365), 'año', 'años')
+}
+
+function plural(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`
 }
