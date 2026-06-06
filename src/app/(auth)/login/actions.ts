@@ -56,7 +56,7 @@ export async function authenticate(
   }
 
   // Sesión creada → al panel. `redirect` lanza, así que no retorna.
-  redirect("/dashboard");
+  redirect("/dashboard/tasks");
 }
 
 export async function signOut(): Promise<void> {

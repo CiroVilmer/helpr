@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation";
-import { LogOut } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/(auth)/login/actions";
-import { Button } from "@/components/ui/button";
-import { HelprMark } from "@/components/brand/helpr-mark";
+import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 
 export default async function DashboardLayout({
   children,
@@ -20,25 +17,11 @@ export default async function DashboardLayout({
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-dvh flex-col bg-crema-base">
-      <header className="sticky top-0 z-40 border-b border-linea bg-crema-base/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
-          <HelprMark size={32} withWordmark />
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-tinta-suave sm:inline">
-              {user.email}
-            </span>
-            <form action={signOut}>
-              <Button type="submit" variant="outline" size="sm">
-                <LogOut aria-hidden="true" />
-                Salir
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1">{children}</main>
+    <div className="min-h-dvh bg-crema-base">
+      <DashboardNav userEmail={user.email ?? ""} />
+      <div className="lg:pl-64">
+        <main className="min-h-dvh">{children}</main>
+      </div>
     </div>
   );
 }

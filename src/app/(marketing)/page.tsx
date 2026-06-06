@@ -198,7 +198,7 @@ export default function LandingPage() {
       {/* ─────────────────────── CTA final ─────────────────────── */}
       <section id="cta" className="bg-bosque-hondo">
         <Container className="reveal flex flex-col items-center gap-7 py-20 text-center sm:py-24">
-          <HelprMark size={56} />
+          <HelprMark size={56} tone="light" />
           <h2 className="max-w-2xl font-display text-3xl font-bold leading-tight text-crema-base sm:text-4xl">
             ¿Sumás Helpr a tu equipo?
           </h2>
@@ -238,7 +238,7 @@ function HeroMock() {
       {/* Snippet del chat con el bot */}
       <div className="overflow-hidden rounded-3xl bg-card ring-1 ring-foreground/10 shadow-[var(--shadow-float)]">
         <div className="flex items-center gap-3 bg-bosque px-4 py-3 text-crema-base">
-          <HelprMark size={36} />
+          <HelprMark size={36} tone="light" />
           <div className="leading-tight">
             <p className="text-sm font-semibold">Helpr</p>
             <p className="text-xs text-crema-base/60">en línea</p>

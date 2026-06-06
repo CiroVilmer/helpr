@@ -9,7 +9,7 @@ export function Footer() {
       <Container className="flex flex-col gap-10 py-14">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm">
-            <HelprMark size={36} withWordmark className="[&_span:last-child]:text-crema-base" />
+            <HelprMark size={36} withWordmark tone="light" />
             <p className="mt-4 text-sm leading-relaxed text-crema-base/70">
               Tu equipo ya coordina por WhatsApp. Helpr le da memoria —tareas,
               decisiones y responsables— sin cambiar cómo trabaja cada persona.
