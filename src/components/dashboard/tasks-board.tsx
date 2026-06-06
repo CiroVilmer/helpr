@@ -10,32 +10,18 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
-import {
-  ChevronDown,
-  CircleDashed,
-  Loader,
-  Plus,
-  UserX,
-  X,
-} from "lucide-react";
+import { CircleDashed, Loader, Plus, UserX, X } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { KanbanColumn } from "@/components/dashboard/kanban-column";
+import { SelectMenu } from "@/components/dashboard/select-menu";
 import {
   TaskEditDialog,
   type TaskCreateInput,
   type TaskPatch,
 } from "@/components/dashboard/task-edit-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   ESTADO_LABELS,
   type DbTareaRow,
@@ -47,13 +33,6 @@ import type { EstadoTarea, Prioridad } from "@/db/schema/tareas";
 
 type PriorityFilter = Prioridad | "all";
 type AssigneeFilter = string | "all" | "none";
-
-const PRIORITY_LABEL: Record<PriorityFilter, string> = {
-  all: "Todas",
-  alta: "Alta",
-  media: "Media",
-  baja: "Baja",
-};
 
 export function TasksBoard({
   initialTasks,
@@ -215,12 +194,6 @@ export function TasksBoard({
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   }, [personas]);
   const hasFilters = priority !== "all" || assignee !== "all";
-  const assigneeLabel =
-    assignee === "all"
-      ? "Todas"
-      : assignee === "none"
-      ? "Sin responsable"
-      : assigneeOptions.find((p) => p.id === assignee)?.nombre ?? "Todas";
 
   return (
     <>
@@ -256,42 +229,32 @@ export function TasksBoard({
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <FilterMenu
+        <SelectMenu
+          variant="pill"
           label="Prioridad"
-          value={PRIORITY_LABEL[priority]}
           active={priority !== "all"}
-        >
-          <DropdownMenuRadioGroup
-            value={priority}
-            onValueChange={(v) => setPriority(v as PriorityFilter)}
-          >
-            <DropdownMenuRadioItem value="all">Todas</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="alta">Alta</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="media">Media</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="baja">Baja</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </FilterMenu>
+          value={priority}
+          onValueChange={(v) => setPriority(v as PriorityFilter)}
+          options={[
+            { value: "all", label: "Todas" },
+            { value: "alta", label: "Alta" },
+            { value: "media", label: "Media" },
+            { value: "baja", label: "Baja" },
+          ]}
+        />
 
-        <FilterMenu
+        <SelectMenu
+          variant="pill"
           label="Responsable"
-          value={assigneeLabel}
           active={assignee !== "all"}
-        >
-          <DropdownMenuRadioGroup
-            value={assignee}
-            onValueChange={(v) => setAssignee(v as AssigneeFilter)}
-          >
-            <DropdownMenuRadioItem value="all">Todas</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="none">
-              Sin responsable
-            </DropdownMenuRadioItem>
-            {assigneeOptions.map((p) => (
-              <DropdownMenuRadioItem key={p.id} value={p.id}>
-                {p.nombre}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </FilterMenu>
+          value={assignee}
+          onValueChange={(v) => setAssignee(v as AssigneeFilter)}
+          options={[
+            { value: "all", label: "Todas" },
+            { value: "none", label: "Sin responsable" },
+            ...assigneeOptions.map((p) => ({ value: p.id, label: p.nombre })),
+          ]}
+        />
 
         {hasFilters && (
           <Button
@@ -344,35 +307,5 @@ export function TasksBoard({
         onCreate={onCreate}
       />
     </>
-  );
-}
-
-function FilterMenu({
-  label,
-  value,
-  active,
-  children,
-}: {
-  label: string;
-  value: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-linea bg-popover px-3 py-1.5 text-xs font-medium text-tinta shadow-sm ring-1 ring-foreground/5 transition-colors hover:bg-muted",
-          active && "border-bosque/40 bg-bosque/5 text-bosque"
-        )}
-      >
-        <span className="text-tinta-suave">{label}:</span>
-        <span>{value}</span>
-        <ChevronDown className="size-3.5" aria-hidden="true" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-44">
-        {children}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AlertCircle, Pencil, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -14,6 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SelectMenu } from "@/components/dashboard/select-menu";
+import { DateField } from "@/components/dashboard/date-field";
 import {
   ESTADO_LABELS,
   ESTADO_ORDER,
@@ -185,9 +186,12 @@ export function TaskEditDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-desc" className="text-xs">
+              <Label
+                htmlFor="task-desc"
+                className="text-xs font-medium text-tinta-suave"
+              >
                 Descripción
               </Label>
               <Textarea
@@ -205,71 +209,75 @@ export function TaskEditDialog({
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="task-estado" className="text-xs">
+                <Label
+                  htmlFor="task-estado"
+                  className="text-xs font-medium text-tinta-suave"
+                >
                   Estado
                 </Label>
-                <select
+                <SelectMenu
                   id="task-estado"
+                  ariaLabel="Estado"
                   value={estado}
-                  onChange={(e) => setEstado(e.target.value as EstadoTarea)}
-                  className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {ESTADO_ORDER.map((e) => (
-                    <option key={e} value={e}>
-                      {ESTADO_LABELS[e]}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setEstado(v as EstadoTarea)}
+                  options={ESTADO_ORDER.map((e) => ({
+                    value: e,
+                    label: ESTADO_LABELS[e],
+                  }))}
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="task-prio" className="text-xs">
+                <Label
+                  htmlFor="task-prio"
+                  className="text-xs font-medium text-tinta-suave"
+                >
                   Prioridad
                 </Label>
-                <select
+                <SelectMenu
                   id="task-prio"
+                  ariaLabel="Prioridad"
                   value={prioridad}
-                  onChange={(e) => setPrioridad(e.target.value as Prioridad)}
-                  className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {PRIORIDADES.map((p) => (
-                    <option key={p} value={p}>
-                      {PRIORIDAD_LABEL[p]}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setPrioridad(v as Prioridad)}
+                  options={PRIORIDADES.map((p) => ({
+                    value: p,
+                    label: PRIORIDAD_LABEL[p],
+                  }))}
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="task-asignado" className="text-xs">
+                <Label
+                  htmlFor="task-asignado"
+                  className="text-xs font-medium text-tinta-suave"
+                >
                   Responsable
                 </Label>
-                <select
+                <SelectMenu
                   id="task-asignado"
+                  ariaLabel="Responsable"
                   value={asignadoId}
-                  onChange={(e) => setAsignadoId(e.target.value)}
-                  className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Sin responsable</option>
-                  {personas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setAsignadoId}
+                  options={[
+                    { value: "", label: "Sin responsable" },
+                    ...personas.map((p) => ({ value: p.id, label: p.nombre })),
+                  ]}
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="task-due" className="text-xs">
+                <Label
+                  htmlFor="task-due"
+                  className="text-xs font-medium text-tinta-suave"
+                >
                   Fecha límite
                 </Label>
-                <Input
+                <DateField
                   id="task-due"
-                  type="date"
                   value={fechaLimite}
-                  onChange={(e) => setFechaLimite(e.target.value)}
+                  onChange={setFechaLimite}
                 />
               </div>
             </div>
