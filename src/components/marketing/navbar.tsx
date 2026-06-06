@@ -27,7 +27,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-linea/70 bg-crema-base/85 backdrop-blur-md supports-[backdrop-filter]:bg-crema-base/70">
       <Container className="flex h-16 items-center justify-between gap-4">
         <a href="#top" className="rounded-lg" aria-label="Helpr — inicio">
-          <HelprMark size={34} withWordmark priority />
+          <HelprMark size={40} withWordmark priority />
         </a>
 
         {/* Navegación desktop */}
