@@ -2,7 +2,13 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { authenticate, type AuthState } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -14,6 +20,7 @@ type Mode = "signin" | "signup";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("signin");
+  const [showPassword, setShowPassword] = useState(false);
   const [state, formAction, pending] = useActionState<
     AuthState | undefined,
     FormData
@@ -30,11 +37,7 @@ export default function LoginPage() {
           className="pointer-events-none absolute -top-24 -right-20 size-96 rounded-full bg-lima/15 blur-3xl"
         />
         <Link href="/" className="relative w-fit rounded-lg">
-          <HelprMark
-            size={40}
-            withWordmark
-            className="[&_span:last-child]:text-crema-base"
-          />
+          <HelprMark size={40} withWordmark tone="light" />
         </Link>
         <div className="relative max-w-md">
           <p className="font-display text-3xl font-bold leading-tight">
@@ -92,16 +95,33 @@ export default function LoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="h-11"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  className="h-11 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-tinta-suave transition-colors hover:text-bosque focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {state?.error && (

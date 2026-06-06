@@ -68,7 +68,7 @@ export async function updateSession(request: NextRequest) {
   // Con sesión → no tiene sentido ver /login.
   if (user && path === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/dashboard/tasks";
     return NextResponse.redirect(url);
   }
 
