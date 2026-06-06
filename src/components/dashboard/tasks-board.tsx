@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   PointerSensor,
@@ -12,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { CircleDashed, Loader, Plus, UserX, X } from "lucide-react";
 
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -48,10 +50,48 @@ export function TasksBoard({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"edit" | "create">("edit");
 
+  // Resync con el server cuando router.refresh() trae datos nuevos (patrón sin useEffect:
+  // ajustar estado durante el render comparando la prop anterior).
+  const [lastInitial, setLastInitial] = useState(initialTasks);
+  if (initialTasks !== lastInitial) {
+    setLastInitial(initialTasks);
+    setTasks(initialTasks);
+  }
+
+  const router = useRouter();
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor)
   );
+
+  // Realtime: ante cualquier cambio en `tareas`, re-fetcheamos del server (query con joins +
+  // scoping correcto). Requiere la policy RLS de SELECT en tareas + estar logueado.
+  useEffect(() => {
+    const supabase = createClient();
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) supabase.realtime.setAuth(token);
+      if (cancelled) return;
+      channel = supabase
+        .channel("tareas-realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "tareas" },
+          () => router.refresh()
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
