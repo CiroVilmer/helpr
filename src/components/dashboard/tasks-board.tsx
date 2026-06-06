@@ -308,7 +308,7 @@ export function TasksBoard({
         )}
       </div>
 
-      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      <DndContext id="tasks-board" sensors={sensors} onDragEnd={onDragEnd}>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
           <KanbanColumn
             title={ESTADO_LABELS.pendiente}
