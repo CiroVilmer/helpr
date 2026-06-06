@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+# this repo uses pnpm - never commit the npm lockfile
+package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
