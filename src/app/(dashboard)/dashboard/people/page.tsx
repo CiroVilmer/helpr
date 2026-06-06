@@ -3,9 +3,11 @@ import { Plus, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { PEOPLE } from "@/components/dashboard/data";
+import { dashboardService } from "@/services/dashboard/dashboard.service";
 
-export default function PeoplePage() {
+export default async function PeoplePage() {
+  const people = await dashboardService.getPeople();
+
   return (
     <div className="px-5 py-8 sm:px-8 lg:py-10">
       <PageHeader
@@ -21,7 +23,7 @@ export default function PeoplePage() {
 
       <div className="mt-6 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 shadow-[var(--shadow-card)]">
         <ul className="divide-y divide-linea">
-          {PEOPLE.map((person) => (
+          {people.map((person) => (
             <li
               key={person.id}
               className="flex items-center gap-4 px-4 py-3.5 sm:px-5"
