@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ListChecks, Users, Gauge, Settings, LogOut, Menu } from "lucide-react";
+import { ListChecks, Users, Gauge, LogOut, Menu } from "lucide-react";
 
 import { signOut } from "@/app/(auth)/login/actions";
 import { HelprMark } from "@/components/brand/helpr-mark";
@@ -21,7 +21,6 @@ const NAV = [
   { href: "/dashboard/tasks", label: "Tareas", icon: ListChecks },
   { href: "/dashboard/people", label: "Personas", icon: Users },
   { href: "/dashboard/carga", label: "Carga", icon: Gauge },
-  { href: "/dashboard/settings", label: "Ajustes", icon: Settings },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
