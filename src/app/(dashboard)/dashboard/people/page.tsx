@@ -1,4 +1,4 @@
-import { LinkIcon, Phone, Shield } from "lucide-react";
+import { LinkIcon, Phone } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -76,16 +76,6 @@ export default async function PeoplePage() {
                       {rolLabel(p.rol)}
                     </p>
                   </div>
-
-                  {p.rol === "admin" && (
-                    <span
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-bosque/10 px-2 py-0.5 text-xs font-medium text-bosque"
-                      title="Puede invitar personas"
-                    >
-                      <Shield className="size-3" aria-hidden="true" />
-                      Admin
-                    </span>
-                  )}
 
                   {!linked && (
                     <span
