@@ -6,6 +6,10 @@ import { signOut } from "@/app/(auth)/login/actions";
 import { Button } from "@/components/ui/button";
 import { HelprMark } from "@/components/brand/helpr-mark";
 
+// Auth gate runs per request (getUser reads cookies) - never prerender this subtree,
+// so `next build` does not require Supabase keys at build time.
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {

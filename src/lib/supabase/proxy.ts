@@ -44,6 +44,20 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // Sin sesion + ruta de API -> 401 JSON (se consumen como fetch/JSON, no redirect).
+  if (!user && (path === "/api" || path.startsWith("/api/"))) {
+    return NextResponse.json(
+      {
+        error: {
+          statusCode: 401,
+          message: "Unauthorized",
+          userMessage: "Inicia sesion para acceder a la API.",
+        },
+      },
+      { status: 401 },
+    );
+  }
+
   // Sin sesión → fuera del dashboard.
   if (!user && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
     const url = request.nextUrl.clone();

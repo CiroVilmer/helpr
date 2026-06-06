@@ -10,7 +10,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Corre en todas las rutas de páginas, excepto estáticos y la API
   // (la API tiene su propia auth por Bearer — ARCHITECTURE §11).
+  // Runs on pages AND /api (the /api 401 is handled in updateSession). Excludes static assets.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
