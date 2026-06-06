@@ -4,6 +4,10 @@ import {
   type WorkloadBucket,
 } from "@/components/dashboard/workload-card";
 import { RedistributeDialog } from "@/components/dashboard/redistribute-dialog";
+import {
+  AssignTaskDialog,
+  type AssignableTask,
+} from "@/components/dashboard/assign-task-dialog";
 import { personasService } from "@/services/personas/personas.service";
 import { tareasService } from "@/services/tareas/tareas.service";
 import { getCurrentOrgContext } from "@/lib/auth/org-context";
@@ -56,6 +60,20 @@ export default async function CargaPage() {
   // hay a quién repartirle cuando existe al menos otra persona activa
   const hasRecipients = members.length > 1;
 
+  // tareas asignables desde el modal "Asignar tarea": activas (no hechas), con su responsable actual
+  const assignableTasks: AssignableTask[] = isAdmin
+    ? tareas
+        .filter((t) => t.estado !== "hecho")
+        .map((t) => ({
+          id: t.id,
+          descripcion: t.descripcion,
+          prioridad: t.prioridad ?? "media",
+          estado: t.estado ?? "pendiente",
+          asignado_id: t.asignado_id,
+          asignado_nombre: t.asignado_nombre,
+        }))
+    : [];
+
   const byCountDesc = (a: Member, b: Member) => b.count - a.count;
   const columns: {
     key: WorkloadBucket;
@@ -98,14 +116,23 @@ export default async function CargaPage() {
                     count={m.count}
                     bucket={m.bucket}
                     action={
-                      isAdmin && col.key === "sobrecargado" ? (
-                        <RedistributeDialog
-                          personaId={m.id}
-                          nombre={m.nombre}
-                          activeCount={m.count}
-                          defaultCount={Math.max(1, m.count - (SOBRECARGADO_MIN - 1))}
-                          hasRecipients={hasRecipients}
-                        />
+                      isAdmin ? (
+                        <>
+                          {col.key === "sobrecargado" ? (
+                            <RedistributeDialog
+                              personaId={m.id}
+                              nombre={m.nombre}
+                              activeCount={m.count}
+                              defaultCount={Math.max(1, m.count - (SOBRECARGADO_MIN - 1))}
+                              hasRecipients={hasRecipients}
+                            />
+                          ) : null}
+                          <AssignTaskDialog
+                            toPersonaId={m.id}
+                            toNombre={m.nombre}
+                            tasks={assignableTasks}
+                          />
+                        </>
                       ) : undefined
                     }
                   />

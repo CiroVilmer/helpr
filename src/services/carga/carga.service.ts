@@ -1,11 +1,12 @@
 // src/services/carga/carga.service.ts
-// Redistribution logic for the workload board. Reads loads via the existing services (org-scoped),
-// then reassigns N of an overloaded person's active tasks to the least-loaded teammates, in a
-// transaction. Admin + org checks live in the server action (carga/actions.ts) that calls this.
+// Workload-board mutations. Reads loads via the existing services (org-scoped). `redistribute`
+// sheds N of an overloaded person's tasks to the least-loaded teammates; `assign` bulk-assigns
+// chosen tasks to one person. Admin + org checks live in the server actions (carga/actions.ts).
 import 'server-only'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/db'
 import { tareas } from '@/db/schema'
+import { tareasRepository } from '@/repositories/tareas/tareas.repository'
 import { tareasService } from '@/services/tareas/tareas.service'
 import { personasService } from '@/services/personas/personas.service'
 import { NotFoundException, ValidationException } from '@/exceptions/base/base-exceptions'
@@ -13,6 +14,7 @@ import { NotFoundException, ValidationException } from '@/exceptions/base/base-e
 const PRIORITY_WEIGHT: Record<string, number> = { baja: 1, media: 2, alta: 3 }
 
 export type RedistributeResult = { moved: number; recipients: number }
+export type AssignResult = { assigned: number }
 
 export const cargaService = {
   async redistribute(
@@ -86,5 +88,33 @@ export const cargaService = {
     })
 
     return { moved: assignments.length, recipients: used.size }
+  },
+
+  // Bulk-assigns the given tasks to one person. Org-scopes the ids (ignores any not in the org)
+  // and verifies the target persona belongs to the org, then sets asignado_id in a single UPDATE.
+  async assign(
+    organizacionId: string,
+    toPersonaId: string,
+    taskIds: string[],
+  ): Promise<AssignResult> {
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      throw new ValidationException('no task ids', 'Elegí al menos una tarea.')
+    }
+
+    const inOrg = await tareasRepository.personaIsInOrg(toPersonaId, organizacionId)
+    if (!inOrg) {
+      throw new NotFoundException('persona not in org', 'Esa persona no es de tu organización.')
+    }
+
+    // org-scope: only touch tasks that belong to this org (don't trust the client's id list)
+    const rows = await tareasService.list({ organizacionId })
+    const orgIds = new Set(rows.map((r) => r.id))
+    const valid = [...new Set(taskIds)].filter((id) => orgIds.has(id))
+    if (valid.length === 0) {
+      throw new ValidationException('no valid tasks', 'Esas tareas no son de tu organización.')
+    }
+
+    await db.update(tareas).set({ asignado_id: toPersonaId }).where(inArray(tareas.id, valid))
+    return { assigned: valid.length }
   },
 }

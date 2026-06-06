@@ -30,7 +30,7 @@ export function WorkloadCard({
   const s = styles[bucket];
 
   return (
-    <article className="flex flex-col gap-3 rounded-xl bg-popover p-4 ring-1 ring-foreground/10 shadow-[var(--shadow-card)]">
+    <article className="group flex flex-col gap-3 rounded-xl bg-popover p-4 ring-1 ring-foreground/10 shadow-[var(--shadow-card)]">
       <div className="flex items-center gap-3">
         <Avatar size="sm">
           <AvatarFallback className="bg-bosque text-[10px] font-semibold text-crema-base">
@@ -60,7 +60,7 @@ export function WorkloadCard({
         <div className={cn("h-full rounded-full", s.bar)} style={{ width: `${pct}%` }} />
       </div>
 
-      {action ? <div className="pt-1">{action}</div> : null}
+      {action ? <div className="flex flex-col gap-2 pt-1">{action}</div> : null}
     </article>
   );
 }
