@@ -3,6 +3,7 @@ import {
   WorkloadCard,
   type WorkloadBucket,
 } from "@/components/dashboard/workload-card";
+import { RedistributeDialog } from "@/components/dashboard/redistribute-dialog";
 import { personasService } from "@/services/personas/personas.service";
 import { tareasService } from "@/services/tareas/tareas.service";
 import { getCurrentOrgContext } from "@/lib/auth/org-context";
@@ -32,6 +33,8 @@ export default async function CargaPage() {
   const ctx = await getCurrentOrgContext();
   if (!ctx) return null; // el layout muestra el empty-state de "sin organización"
 
+  const isAdmin = ctx.rol === "admin";
+
   const [personas, tareas] = await Promise.all([
     personasService.list({ organizacionId: ctx.organizacionId, activo: true }),
     tareasService.list({ organizacionId: ctx.organizacionId }),
@@ -49,6 +52,9 @@ export default async function CargaPage() {
     const count = activos.get(p.id) ?? 0;
     return { id: p.id, nombre, initials: initialsOf(nombre), count, bucket: bucketOf(count) };
   });
+
+  // hay a quién repartirle cuando existe al menos otra persona activa
+  const hasRecipients = members.length > 1;
 
   const byCountDesc = (a: Member, b: Member) => b.count - a.count;
   const columns: {
@@ -91,6 +97,17 @@ export default async function CargaPage() {
                     initials={m.initials}
                     count={m.count}
                     bucket={m.bucket}
+                    action={
+                      isAdmin && col.key === "sobrecargado" ? (
+                        <RedistributeDialog
+                          personaId={m.id}
+                          nombre={m.nombre}
+                          activeCount={m.count}
+                          defaultCount={Math.max(1, m.count - (SOBRECARGADO_MIN - 1))}
+                          hasRecipients={hasRecipients}
+                        />
+                      ) : undefined
+                    }
                   />
                 ))
               ) : (

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -17,11 +18,13 @@ export function WorkloadCard({
   initials,
   count,
   bucket,
+  action,
 }: {
   nombre: string;
   initials: string;
   count: number;
   bucket: WorkloadBucket;
+  action?: ReactNode;
 }) {
   const pct = Math.min(count / WORKLOAD_BAR_CAP, 1) * 100;
   const s = styles[bucket];
@@ -56,6 +59,8 @@ export function WorkloadCard({
       >
         <div className={cn("h-full rounded-full", s.bar)} style={{ width: `${pct}%` }} />
       </div>
+
+      {action ? <div className="pt-1">{action}</div> : null}
     </article>
   );
 }
