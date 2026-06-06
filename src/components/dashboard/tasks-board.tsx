@@ -37,6 +37,15 @@ import type { EstadoTarea, Prioridad } from "@/db/schema/tareas";
 type PriorityFilter = Prioridad | "all";
 type AssigneeFilter = string | "all" | "none";
 type ProjectFilter = string | "all";
+type DueFilter = "all" | "today" | "week" | "month";
+
+function toLocalDateString(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
 
 export function TasksBoard({
   initialTasks,
@@ -51,6 +60,7 @@ export function TasksBoard({
   const [priority, setPriority] = useState<PriorityFilter>("all");
   const [assignee, setAssignee] = useState<AssigneeFilter>("all");
   const [project, setProject] = useState<ProjectFilter>("all");
+  const [due, setDue] = useState<DueFilter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"edit" | "create">("edit");
@@ -98,10 +108,29 @@ export function TasksBoard({
     };
   }, [router]);
 
+  const now = new Date();
+  const today = toLocalDateString(now);
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const weekStart = toLocalDateString(startOfWeek);
+  const weekEnd = toLocalDateString(endOfWeek);
+  const monthStart = toLocalDateString(
+    new Date(now.getFullYear(), now.getMonth(), 1)
+  );
+  const monthEnd = toLocalDateString(
+    new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  );
+
   const filtered = useMemo(() => {
     return tasks.filter((t) => {
       if (priority !== "all" && t.prioridad !== priority) return false;
-      if (assignee === "none" && t.asignado !== null) return false;
+      if (
+        assignee === "none" &&
+        (t.asignado !== null || t.estado === "hecho")
+      )
+        return false;
       if (
         assignee !== "all" &&
         assignee !== "none" &&
@@ -109,25 +138,44 @@ export function TasksBoard({
       )
         return false;
       if (project !== "all" && t.proyecto_id !== project) return false;
+      if (
+        due !== "all" &&
+        (!t.fecha_limite || t.estado === "hecho")
+      )
+        return false;
+      if (due === "today" && t.fecha_limite !== today) return false;
+      if (
+        due === "week" &&
+        (t.fecha_limite! < weekStart || t.fecha_limite! > weekEnd)
+      )
+        return false;
+      if (
+        due === "month" &&
+        (t.fecha_limite! < monthStart || t.fecha_limite! > monthEnd)
+      )
+        return false;
       return true;
     });
-  }, [tasks, priority, assignee, project]);
+  }, [
+    tasks,
+    priority,
+    assignee,
+    project,
+    due,
+    today,
+    weekStart,
+    weekEnd,
+    monthStart,
+    monthEnd,
+  ]);
 
   const pendiente = filtered.filter((t) => t.estado === "pendiente");
   const enProgreso = filtered.filter((t) => t.estado === "en_progreso");
   const hecho = filtered.filter((t) => t.estado === "hecho");
-  const unfinished = filtered.filter((t) => t.estado !== "hecho");
+  const unfinished = tasks.filter((t) => t.estado !== "hecho");
   const proyectosEnCurso = new Set(unfinished.map((t) => t.proyecto_id)).size;
-  const now = new Date();
-  const today = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
   const vencenHoy = unfinished.filter((t) => t.fecha_limite === today).length;
-  const sinResponsable = filtered.filter(
-    (t) => !t.asignado && t.estado !== "hecho"
-  ).length;
+  const sinResponsable = unfinished.filter((t) => !t.asignado).length;
 
   const editingTask = editingId
     ? tasks.find((t) => t.id === editingId) ?? null
@@ -260,8 +308,28 @@ export function TasksBoard({
       .slice()
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   }, [personas]);
+  function clearFilters() {
+    setPriority("all");
+    setAssignee("all");
+    setProject("all");
+    setDue("all");
+  }
+
+  function viewDueToday() {
+    clearFilters();
+    setDue("today");
+  }
+
+  function viewUnassigned() {
+    clearFilters();
+    setAssignee("none");
+  }
+
   const hasFilters =
-    priority !== "all" || assignee !== "all" || project !== "all";
+    priority !== "all" ||
+    assignee !== "all" ||
+    project !== "all" ||
+    due !== "all";
 
   return (
     <>
@@ -287,12 +355,14 @@ export function TasksBoard({
           value={vencenHoy}
           icon={CalendarClock}
           tone="warning"
+          onView={viewDueToday}
         />
         <StatCard
           label="Sin responsable"
           value={sinResponsable}
           icon={UserX}
           tone="risk"
+          onView={viewUnassigned}
         />
       </div>
 
@@ -336,15 +406,25 @@ export function TasksBoard({
           ]}
         />
 
+        <SelectMenu
+          variant="pill"
+          label="Vencimiento"
+          active={due !== "all"}
+          value={due}
+          onValueChange={(v) => setDue(v as DueFilter)}
+          options={[
+            { value: "all", label: "Todos" },
+            { value: "today", label: "Hoy" },
+            { value: "week", label: "Esta semana" },
+            { value: "month", label: "Este mes" },
+          ]}
+        />
+
         {hasFilters && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              setPriority("all");
-              setAssignee("all");
-              setProject("all");
-            }}
+            onClick={clearFilters}
           >
             <X aria-hidden="true" />
             Limpiar
