@@ -4,8 +4,10 @@
 // user signs up via an invite link `/login?personaId=<uuid>`. n8n-created personas leave it NULL.
 // The FK to auth.users is enforced at DB level (Drizzle does not model the `auth` schema).
 //
-// rol: enforced as 'admin' | 'volunteer' at the app layer (no DB CHECK so n8n can write
-// free-text without breaking; the dashboard normalises anything else to 'volunteer').
+// rol: enforced as 'admin' | 'volunteer' (or NULL) by a DB CHECK constraint
+// (personas_rol_check) applied 2026-06-06 via scripts/2026-06-06_personas_rol_check.mjs.
+// n8n writes that don't conform will fail with PG error 23514. The app layer also
+// normalises legacy free-text on read (org-context maps anything ≠ 'admin' to 'volunteer').
 import { pgTable, uuid, text, boolean, timestamp } from 'drizzle-orm/pg-core'
 import { organizaciones } from './organizaciones'
 
